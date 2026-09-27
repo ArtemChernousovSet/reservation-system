@@ -2,21 +2,23 @@
 
 REST API for managing room reservations, built with Java 21 and Spring Boot.
 
-The project focuses on backend fundamentals used in real applications: database-backed authentication, session-based security, ownership authorization, persistence with PostgreSQL, reservation conflict checks, validation, and automated service tests.
+The project focuses on backend fundamentals used in real applications: database-backed authentication, session-based security, ownership and role-based authorization, persistence with PostgreSQL, reservation conflict checks, validation, and automated service tests.
 
-> **Project status:** USER authorization is implemented. ADMIN-specific authorization is the next development stage.
+> **Project status:** Authorization for `USER` and `ADMIN` roles is implemented. Security integration tests and API documentation are planned next.
 
 ## Features
 
 - User registration and login
 - Password encoding with Spring Security
 - Session-based authentication using `SecurityContext` and `JSESSIONID`
-- Create reservations for the authenticated user
-- View all reservations owned by the authenticated user
-- View a specific reservation only when it belongs to the authenticated user
-- Update only owned reservations with `PENDING` status
-- Cancel only owned reservations
-- Ownership violations return `403 Forbidden`
+- Role-based authorization for `USER` and `ADMIN`
+- Create reservations for the authenticated user with server-controlled ownership and initial status
+- View, update, and cancel owned reservations as a regular user
+- Prevent regular users from accessing reservations owned by other users
+- Allow administrators to view, update, and cancel reservations across users
+- Allow administrators to cancel approved reservations
+- Restrict reservation search and approval endpoints to `ADMIN`
+- Validate reservation date ranges and reject start dates in the past
 - Reservation availability and date-conflict checks
 - Search and pagination support for reservations
 - Centralized exception handling
@@ -53,7 +55,9 @@ Repository
 PostgreSQL
 ```
 
-Authentication and reservation ownership are kept separate from client input. The client does not choose the reservation owner or initial status.
+Authentication, reservation ownership, and role checks are kept separate from client input. The client does not choose the reservation owner or initial status.
+
+For reservation operations that support administrative access, the service applies ownership and role checks:
 
 ```text
 Authenticated request
@@ -64,16 +68,16 @@ username
         ↓
 UserRepository
         ↓
-current userId
+current user + role
         ↓
-reservation.userId == current userId ?
-        ↓
-      yes / no
-       ↓     ↓
+is owner OR ADMIN?
+      ↓        ↓
+     yes       no
+      ↓         ↓
     allow   403 Forbidden
 ```
 
-When a reservation is created, the server assigns the authenticated user's ID and sets the reservation status to `PENDING`.
+When a reservation is created, the server assigns the authenticated user's ID and sets the reservation status to `PENDING`. When an administrator updates another user's reservation, the original owner is preserved.
 
 ## API
 
@@ -81,7 +85,7 @@ When a reservation is created, the server assigns the authenticated user's ID an
 
 | Method | Endpoint | Access | Description |
 |---|---|---|---|
-| `POST` | `/user/register` | Public | Register a new user |
+| `POST` | `/user/register` | Public | Register a new user with the `USER` role |
 | `POST` | `/user/login` | Public | Authenticate and create an HTTP session |
 
 ### Reservations
@@ -89,15 +93,15 @@ When a reservation is created, the server assigns the authenticated user's ID an
 | Method | Endpoint | Access | Description |
 |---|---|---|---|
 | `POST` | `/reservation` | Authenticated | Create a reservation for the current user |
-| `GET` | `/reservation/all` | Authenticated | Get all reservations owned by the current user |
-| `GET` | `/reservation/{id}` | Owner | Get one owned reservation |
-| `PUT` | `/reservation/{id}` | Owner | Update an owned `PENDING` reservation |
-| `DELETE` | `/reservation/{id}/cancel` | Owner | Cancel an owned reservation |
+| `GET` | `/reservation/all` | Authenticated | Get reservations owned by the current user |
+| `GET` | `/reservation/{id}` | Owner or Admin | Get a reservation when owned by the user or accessed by an admin |
+| `PUT` | `/reservation/{id}` | Owner or Admin | Update a `PENDING` reservation while preserving its owner |
+| `DELETE` | `/reservation/{id}/cancel` | Owner or Admin | Cancel a reservation; admins may also cancel approved reservations |
 | `POST` | `/reservation/availability/check` | Authenticated | Check whether a room is available for a date range |
-| `GET` | `/reservation` | Admin endpoint in progress | Search reservations with filters and pagination |
-| `POST` | `/reservation/{id}/approve` | Admin endpoint in progress | Approve a pending reservation |
+| `GET` | `/reservation` | Admin | Search reservations with filters and pagination |
+| `POST` | `/reservation/{id}/approve` | Admin | Approve a pending reservation after a conflict check |
 
-The last two endpoints already contain service logic, but role-based access restriction for `ADMIN` is still being implemented.
+Regular users can work only with their own reservations. Administrative search and approval are restricted at the Spring Security layer, while ownership-sensitive operations also enforce authorization in the service layer.
 
 ## Authentication
 
@@ -106,6 +110,8 @@ Login uses Spring Security's `AuthenticationManager`. After successful authentic
 Subsequent requests are associated with the authenticated user through the session cookie (`JSESSIONID`).
 
 Passwords are stored using Spring Security's `DelegatingPasswordEncoder`.
+
+New registrations are assigned the `USER` role by the server; clients cannot register themselves as `ADMIN`.
 
 ## Running Locally
 
@@ -142,7 +148,6 @@ The API is available at:
 http://localhost:8080
 ```
 
-
 ## API Usage Example
 
 Register a user:
@@ -170,12 +175,12 @@ curl -X POST http://localhost:8080/reservation \
   -b cookies.txt \
   -d '{
     "roomId": 5,
-    "startDate": "2026-09-20",
-    "endDate": "2026-09-22"
+    "startDate": "2030-01-20",
+    "endDate": "2030-01-22"
   }'
 ```
 
-The client does not send `userId` or `status`; both are controlled by the server.
+The client does not send `userId` or `status`; both are controlled by the server. Reservation start dates cannot be in the past, and `endDate` must be after `startDate`.
 
 ## Testing
 
@@ -189,6 +194,9 @@ The current service tests cover successful flows and failure cases including:
 
 - reservation creation and date validation
 - ownership checks for reading, updating, and cancelling reservations
+- administrative access to reservations owned by other users
+- preservation of reservation ownership during admin updates
+- admin cancellation of approved reservations
 - missing users and reservations
 - invalid reservation status transitions
 - search pagination behavior
@@ -196,19 +204,16 @@ The current service tests cover successful flows and failure cases including:
 
 ## Error Handling
 
-The API uses a centralized `GlobalExceptionHandler` for consistent HTTP responses, including:
+The API uses a centralized `GlobalExceptionHandler` for application-level errors, including:
 
 - `400 Bad Request` — invalid input or invalid reservation state
-- `401 Unauthorized` — invalid credentials
-- `403 Forbidden` — authenticated user attempts to access another user's reservation
+- `401 Unauthorized` — invalid credentials or missing authentication
+- `403 Forbidden` — ownership or role-based authorization failure
 - `404 Not Found` — user or reservation does not exist
 - `500 Internal Server Error` — unexpected server errors
 
 ## Roadmap
 
-- Enforce `ADMIN` role authorization for administrative endpoints
-- Allow administrators to view and manage reservations across users
-- Restrict reservation approval to administrators
-- Add controller/security integration tests
+- Add controller and Spring Security integration tests
 - Add OpenAPI / Swagger documentation
 - Review CSRF strategy before production-style browser usage

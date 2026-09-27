@@ -305,7 +305,7 @@ class ReservationServiceTest {
         Assertions.assertEquals(expectedReservation, result);
 
         Mockito.verify(mapper).toEntity(reservationToCreate);
-        Mockito.verify(repository, Mockito.times(1)).save(reservationToSave);
+        Mockito.verify(repository).save(reservationToSave);
         Mockito.verify(userRepository).findByUsername(name);
     }
 
@@ -317,7 +317,9 @@ class ReservationServiceTest {
                 LocalDate.of(2026, 8, 25)
         );
 
-        Assertions.assertThrows(IllegalArgumentException.class, () -> reservationService.createReservation(reservationToCreate, "Artem"));
+        Assertions.assertThrows(
+                IllegalArgumentException.class,
+                () -> reservationService.createReservation(reservationToCreate, "Artem"));
         Mockito.verify(repository, Mockito.never()).save(Mockito.any());
     }
 
@@ -329,7 +331,9 @@ class ReservationServiceTest {
                 LocalDate.of(2026, 8, 25)
         );
 
-        Assertions.assertThrows(IllegalArgumentException.class, () -> reservationService.createReservation(reservationToCreate, "Artem"));
+        Assertions.assertThrows(
+                IllegalArgumentException.class,
+                () -> reservationService.createReservation(reservationToCreate, "Artem"));
         Mockito.verify(repository, Mockito.never()).save(Mockito.any());
     }
 
