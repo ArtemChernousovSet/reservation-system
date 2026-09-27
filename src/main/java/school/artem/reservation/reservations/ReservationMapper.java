@@ -1,7 +1,6 @@
 package school.artem.reservation.reservations;
 
 import org.springframework.stereotype.Component;
-import school.artem.reservation.reservations.availability.UpdateReservationRequest;
 
 @Component
 public class ReservationMapper {

@@ -46,7 +46,7 @@ public class ReservationController {
 
         String username = authentication.getName();
 
-        log.info("Called getAllReservationsById: username={}", username);
+        log.info("Called getAllReservations: username={}", username);
 
         return ResponseEntity.ok(reservationService.getAllReservations(username));
     }
@@ -58,7 +58,7 @@ public class ReservationController {
             @RequestParam(name = "pageSize", required = false) Integer pageSize,
             @RequestParam(name = "pageNumber", required = false) Integer pageNumber
     ){
-        log.info("Called getAllReservations");
+        log.info("Called searchAllByFilter");
 
         var filter = new ReservationSearchFilter(
                 roomId,
@@ -106,7 +106,7 @@ public class ReservationController {
 
         String username = authentication.getName();
 
-        log.info("Called deleteReservation id={}", id);
+        log.info("Called cancelReservation id={}", id);
 
         reservationService.cancelReservation(id, username);
 
