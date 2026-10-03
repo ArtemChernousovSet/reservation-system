@@ -11,7 +11,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.net.BindException;
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -55,7 +57,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(exception = {
             IllegalArgumentException.class,
             IllegalStateException.class,
-            MethodArgumentNotValidException.class
             })
     public ResponseEntity<ErrorResponseDto> handleBadRequest(
             Exception e
@@ -118,6 +119,29 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
+                .body(errorDto);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponseDto> methodArgumentNotValidException(
+            MethodArgumentNotValidException e
+    ) {
+        log.error("Handle methodArgumentNotValidException");
+
+        String details = e.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.joining("; "));
+
+        var errorDto = new ErrorResponseDto(
+                "Validation failed",
+                details,
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
                 .body(errorDto);
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import school.artem.reservation.reservations.ReservationController;
 import school.artem.reservation.reservations.ReservationService;
 import school.artem.reservation.security.SecurityConfig;
@@ -53,34 +54,34 @@ class ReservationSecurityTest {
     }
 
     @Test
-    void approveReservation_shouldReturnUnauthorized_whenUserIsNotAuthenticated() throws Exception{
+    void approveReservation_shouldReturnUnauthorized_whenUserIsNotAuthenticated() throws Exception {
         mockMvc.perform(post("/reservation/1/approve"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     @WithMockUser(username = "user", roles = "USER")
-    void approveReservation_shouldReturnForbidden_whenUserHasRoleUser() throws Exception{
+    void approveReservation_shouldReturnForbidden_whenUserHasRoleUser() throws Exception {
         mockMvc.perform(post("/reservation/1/approve"))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     @WithMockUser(username = "admin", roles = "ADMIN")
-    void approveReservation_shouldReturnOk_whenUserHasRoleAdmin() throws Exception{
+    void approveReservation_shouldReturnOk_whenUserHasRoleAdmin() throws Exception {
         mockMvc.perform(post("/reservation/1/approve"))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void getAllReservations_shouldReturnUnauthorized_whenUserIsNotAuthenticated() throws Exception{
+    void getAllReservations_shouldReturnUnauthorized_whenUserIsNotAuthenticated() throws Exception {
         mockMvc.perform(get("/reservation/all"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     @WithMockUser(username = "user", roles = "USER")
-    void getAllReservations_shouldReturnOk_whenUserHasRoleUser() throws Exception{
+    void getAllReservations_shouldReturnOk_whenUserHasRoleUser() throws Exception {
         mockMvc.perform(get("/reservation/all"))
                 .andExpect(status().isOk());
     }
