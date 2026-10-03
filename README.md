@@ -2,9 +2,9 @@
 
 REST API for managing room reservations, built with Java 21 and Spring Boot.
 
-The project focuses on backend fundamentals used in real applications: database-backed authentication, session-based security, ownership and role-based authorization, persistence with PostgreSQL, reservation conflict checks, validation, and automated service tests.
+The project focuses on backend fundamentals used in real applications: database-backed authentication, session-based security, ownership and role-based authorization, persistence with PostgreSQL, reservation conflict checks, validation, and automated service and security integration tests.
 
-> **Project status:** Authorization for `USER` and `ADMIN` roles is implemented. Security integration tests and API documentation are planned next.
+> **Project status:** Authorization for `USER` and `ADMIN` roles and Spring Security integration tests are implemented. API documentation is planned next.
 
 ## Features
 
@@ -22,7 +22,7 @@ The project focuses on backend fundamentals used in real applications: database-
 - Reservation availability and date-conflict checks
 - Search and pagination support for reservations
 - Centralized exception handling
-- Unit tests with JUnit 5 and Mockito
+- Service unit tests and Spring Security integration tests with JUnit 5, Mockito, and MockMvc
 
 ## Tech Stack
 
@@ -202,6 +202,13 @@ The current service tests cover successful flows and failure cases including:
 - search pagination behavior
 - reservation approval and availability conflicts
 
+Spring Security integration tests verify:
+
+- unauthenticated requests to protected endpoints return `401 Unauthorized`
+- authenticated `USER` access to admin-only endpoints returns `403 Forbidden`
+- authenticated `ADMIN` access to admin-only endpoints succeeds
+- authenticated regular users can access endpoints protected by `.authenticated()`
+
 ## Error Handling
 
 The API uses a centralized `GlobalExceptionHandler` for application-level errors, including:
@@ -214,6 +221,5 @@ The API uses a centralized `GlobalExceptionHandler` for application-level errors
 
 ## Roadmap
 
-- Add controller and Spring Security integration tests
 - Add OpenAPI / Swagger documentation
 - Review CSRF strategy before production-style browser usage
