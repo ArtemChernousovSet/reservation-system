@@ -2,6 +2,7 @@ package school.artem.reservation.auth;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -42,7 +43,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<RegisterResponse> create(
-            @RequestBody RegisterRequest registerRequest
+            @RequestBody @Valid RegisterRequest registerRequest
     ) {
         log.info("Called registerUser");
 
@@ -53,7 +54,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<String> login(
-            @RequestBody LoginRequest loginRequest,
+            @RequestBody @Valid LoginRequest loginRequest,
             HttpServletRequest request,
             HttpServletResponse response
     ) {
