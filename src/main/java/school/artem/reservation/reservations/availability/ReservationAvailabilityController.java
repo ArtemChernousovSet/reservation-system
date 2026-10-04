@@ -1,6 +1,10 @@
 package school.artem.reservation.reservations.availability;
 
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@SecurityRequirement(name = "sessionAuth")
 @RestController
 @RequestMapping("/reservation/availability")
 public class ReservationAvailabilityController {
@@ -23,6 +28,15 @@ public class ReservationAvailabilityController {
     }
 
     @PostMapping("/check")
+    @Operation(
+            summary = "Check reservation availability",
+            description = "Checks whether a room is available for the requested date range"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Availability checked successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request data"),
+            @ApiResponse(responseCode = "401", description = "User is not authenticated")
+    })
     public ResponseEntity<CheckAvailabilityResponse> checkAvailability(
             @RequestBody @Valid CheckAvailabilityRequest request
     ) {
