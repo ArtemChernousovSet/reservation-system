@@ -1,5 +1,8 @@
 package school.artem.reservation.auth;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -42,6 +45,14 @@ public class AuthController {
     }
 
     @PostMapping("/register")
+    @Operation(
+            summary = "Register user",
+            description = "Registers a new user account"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "User registered successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request data"),
+    })
     public ResponseEntity<RegisterResponse> create(
             @RequestBody @Valid RegisterRequest registerRequest
     ) {
@@ -53,6 +64,15 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @Operation(
+            summary = "Login user",
+            description = "Authenticates a user and creates a session"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "User authenticated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request data"),
+            @ApiResponse(responseCode = "401", description = "Invalid username or password")
+    })
     public ResponseEntity<String> login(
             @RequestBody @Valid LoginRequest loginRequest,
             HttpServletRequest request,

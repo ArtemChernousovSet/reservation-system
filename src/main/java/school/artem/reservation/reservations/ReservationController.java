@@ -1,6 +1,10 @@
 package school.artem.reservation.reservations;
 
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +17,7 @@ import school.artem.reservation.reservations.availability.UpdateReservationReque
 
 import java.util.List;
 
+@SecurityRequirement(name = "sessionAuth")
 @RestController
 @RequestMapping("/reservation")
 public class ReservationController {
@@ -26,6 +31,16 @@ public class ReservationController {
     }
 
     @GetMapping("/{id}")
+    @Operation(
+            summary = "Get reservation by ID",
+            description = "Returns a reservation by ID if the authenticated user is the owner or an admin"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Reservation found"),
+            @ApiResponse(responseCode = "401", description = "User is not authenticated"),
+            @ApiResponse(responseCode = "403", description = "User is not allowed to access this reservation"),
+            @ApiResponse(responseCode = "404", description = "Reservation or user not found")
+    })
     public ResponseEntity<Reservation> getReservationById(
             @PathVariable("id") Long id,
             Authentication authentication
@@ -40,6 +55,15 @@ public class ReservationController {
     }
 
     @GetMapping("/all")
+    @Operation(
+            summary = "Get user's reservations",
+            description = "Returns all reservations belonging to the authenticated user"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Reservations returned successfully"),
+            @ApiResponse(responseCode = "401", description = "User is not authenticated"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
     public ResponseEntity<List<Reservation>> getAllReservations(
             Authentication authentication
     ){
@@ -52,6 +76,15 @@ public class ReservationController {
     }
 
     @GetMapping
+    @Operation(
+            summary = "Search reservations",
+            description = "Searches reservations. Available only to admins"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Reservations returned successfully"),
+            @ApiResponse(responseCode = "401", description = "User is not authenticated"),
+            @ApiResponse(responseCode = "403", description = "User is not allowed to access all reservations"),
+    })
     public ResponseEntity<List<Reservation>> searchAllByFilter(
             @RequestParam(name = "roomId", required = false) Long roomId,
             @RequestParam(name = "userId", required = false) Long userId,
@@ -71,6 +104,16 @@ public class ReservationController {
     }
 
     @PostMapping
+    @Operation(
+            summary = "Create reservation",
+            description = "Creates a new reservation for the authenticated user"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Reservation created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request data"),
+            @ApiResponse(responseCode = "401", description = "User is not authenticated"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
     public ResponseEntity<Reservation> createReservation(
             @RequestBody @Valid CreateReservationRequest reservationToCreate,
             Authentication authentication
@@ -84,6 +127,17 @@ public class ReservationController {
     }
 
     @PutMapping("/{id}")
+    @Operation(
+            summary = "Update reservation",
+            description = "Updates a reservation if the authenticated user is the owner or an admin"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Reservation updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid reservation data or reservation cannot be updated"),
+            @ApiResponse(responseCode = "401", description = "User is not authenticated"),
+            @ApiResponse(responseCode = "403", description = "User is not allowed to update this reservation"),
+            @ApiResponse(responseCode = "404", description = "Reservation or user not found")
+    })
     public ResponseEntity<Reservation> updateReservation(
             @PathVariable("id") Long id,
             @RequestBody @Valid UpdateReservationRequest updateReservationRequest,
@@ -99,6 +153,17 @@ public class ReservationController {
     }
 
     @DeleteMapping("/{id}/cancel")
+    @Operation(
+            summary = "Cancel reservation",
+            description = "Cancels a reservation. An admin can also cancel an approved reservation"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Reservation cancelled successfully"),
+            @ApiResponse(responseCode = "400", description = "Reservation cannot be cancelled"),
+            @ApiResponse(responseCode = "401", description = "User is not authenticated"),
+            @ApiResponse(responseCode = "403", description = "User is not allowed to cancel this reservation"),
+            @ApiResponse(responseCode = "404", description = "Reservation or user not found")
+    })
     public ResponseEntity<String> cancelReservation(
             @PathVariable("id") Long id,
             Authentication authentication
@@ -114,6 +179,17 @@ public class ReservationController {
     }
 
     @PostMapping("/{id}/approve")
+    @Operation(
+            summary = "Approve reservation",
+            description = "Approves a pending reservation. Available only to admins"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Reservation approved successfully"),
+            @ApiResponse(responseCode = "400", description = "Reservation cannot be approved or has an availability conflict"),
+            @ApiResponse(responseCode = "401", description = "User is not authenticated"),
+            @ApiResponse(responseCode = "403", description = "User is not allowed to approve reservation"),
+            @ApiResponse(responseCode = "404", description = "Reservation not found"),
+    })
     public ResponseEntity<Reservation> approveReservation(
             @PathVariable("id") Long id
     ) {

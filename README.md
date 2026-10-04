@@ -2,9 +2,9 @@
 
 REST API for managing room reservations, built with Java 21 and Spring Boot.
 
-The project focuses on backend fundamentals used in real applications: database-backed authentication, session-based security, ownership and role-based authorization, persistence with PostgreSQL, reservation conflict checks, validation, and automated service and security integration tests.
+The project focuses on backend fundamentals used in real applications: database-backed authentication, session-based security, ownership and role-based authorization, persistence with PostgreSQL, reservation conflict checks, input validation, automated tests, and OpenAPI documentation.
 
-> **Project status:** Authorization for `USER` and `ADMIN` roles and Spring Security integration tests are implemented. API documentation is planned next.
+> **Project status:** Core functionality, `USER` / `ADMIN` authorization, authentication input validation, automated tests, and OpenAPI / Swagger documentation are implemented.
 
 ## Features
 
@@ -12,6 +12,7 @@ The project focuses on backend fundamentals used in real applications: database-
 - Password encoding with Spring Security
 - Session-based authentication using `SecurityContext` and `JSESSIONID`
 - Role-based authorization for `USER` and `ADMIN`
+- Authentication input validation
 - Create reservations for the authenticated user with server-controlled ownership and initial status
 - View, update, and cancel owned reservations as a regular user
 - Prevent regular users from accessing reservations owned by other users
@@ -22,7 +23,8 @@ The project focuses on backend fundamentals used in real applications: database-
 - Reservation availability and date-conflict checks
 - Search and pagination support for reservations
 - Centralized exception handling
-- Service unit tests and Spring Security integration tests with JUnit 5, Mockito, and MockMvc
+- Service unit tests, Spring Security integration tests, and authentication validation tests
+- OpenAPI documentation with Swagger UI
 
 ## Tech Stack
 
@@ -35,6 +37,8 @@ The project focuses on backend fundamentals used in real applications: database-
 - Maven
 - JUnit 5
 - Mockito
+- MockMvc
+- springdoc-openapi / Swagger UI
 - Docker for local PostgreSQL development
 
 ## Architecture
@@ -113,6 +117,30 @@ Passwords are stored using Spring Security's `DelegatingPasswordEncoder`.
 
 New registrations are assigned the `USER` role by the server; clients cannot register themselves as `ADMIN`.
 
+Login and registration requests are validated before authentication or user creation. Blank usernames and passwords are rejected with `400 Bad Request`.
+
+## OpenAPI / Swagger
+
+The API is documented using OpenAPI and Swagger UI.
+
+Swagger UI is available at:
+
+```text
+http://localhost:8080/swagger-ui.html
+```
+
+The generated OpenAPI specification is available at:
+
+```text
+http://localhost:8080/v3/api-docs
+```
+
+Swagger documents request bodies, parameters, HTTP response codes, and access requirements for the API endpoints.
+
+Protected reservation endpoints use the documented `sessionAuth` security scheme based on the `JSESSIONID` session cookie.
+
+Swagger UI can also be used to execute requests directly against the running application.
+
 ## Running Locally
 
 ### Requirements
@@ -146,6 +174,12 @@ The API is available at:
 
 ```text
 http://localhost:8080
+```
+
+Swagger UI is available at:
+
+```text
+http://localhost:8080/swagger-ui.html
 ```
 
 ## API Usage Example
@@ -190,7 +224,7 @@ Run the test suite with:
 ./mvnw test
 ```
 
-The current service tests cover successful flows and failure cases including:
+The service tests cover successful flows and failure cases including:
 
 - reservation creation and date validation
 - ownership checks for reading, updating, and cancelling reservations
@@ -209,11 +243,17 @@ Spring Security integration tests verify:
 - authenticated `ADMIN` access to admin-only endpoints succeeds
 - authenticated regular users can access endpoints protected by `.authenticated()`
 
+Authentication validation tests verify:
+
+- blank login credentials return `400 Bad Request`
+- blank registration credentials return `400 Bad Request`
+- validation errors are handled by the centralized exception handler
+
 ## Error Handling
 
 The API uses a centralized `GlobalExceptionHandler` for application-level errors, including:
 
-- `400 Bad Request` — invalid input or invalid reservation state
+- `400 Bad Request` — invalid input, validation errors, or invalid reservation state
 - `401 Unauthorized` — invalid credentials or missing authentication
 - `403 Forbidden` — ownership or role-based authorization failure
 - `404 Not Found` — user or reservation does not exist
@@ -221,5 +261,10 @@ The API uses a centralized `GlobalExceptionHandler` for application-level errors
 
 ## Roadmap
 
-- Add OpenAPI / Swagger documentation
+The main portfolio scope of the project is complete.
+
+Possible future improvements:
+
 - Review CSRF strategy before production-style browser usage
+- Add database migrations with Flyway
+- Add Docker Compose for application and PostgreSQL
