@@ -1,4 +1,4 @@
-package school.artem.reservation;
+package school.artem.reservation.config;
 
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
