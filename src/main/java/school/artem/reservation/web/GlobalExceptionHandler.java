@@ -11,7 +11,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import java.net.BindException;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
@@ -28,7 +27,7 @@ public class GlobalExceptionHandler {
 
         var errorDto = new ErrorResponseDto(
                 "Internal Server Error",
-                e.getMessage(),
+                "An unexpected error occurred",
                 LocalDateTime.now()
         );
 
@@ -44,7 +43,7 @@ public class GlobalExceptionHandler {
         log.error("Handle entityNotFoundException", e);
 
         var errorDto = new ErrorResponseDto(
-                "Entity Server Error",
+                "Not found",
                 e.getMessage(),
                 LocalDateTime.now()
         );

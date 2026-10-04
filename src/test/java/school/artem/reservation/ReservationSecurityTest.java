@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import school.artem.reservation.reservations.ReservationController;
 import school.artem.reservation.reservations.ReservationService;
 import school.artem.reservation.security.SecurityConfig;
